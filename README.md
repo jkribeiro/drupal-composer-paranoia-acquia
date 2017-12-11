@@ -22,7 +22,10 @@ mv docroot app
 Update the `composer.json` of your root package with the following changes:
 ```
     "scripts": {
-        "drupal-paranoia": "Jkribeiro\\DrupalComposerParanoia\\Plugin::install",
+        "drupal-paranoia": [
+            "Jkribeiro\\DrupalComposerParanoia\\Plugin::install",
+            "Jkribeiro\\DrupalComposerParanoiaAcquia\\Plugin::install"
+        ],
         "..."
     }
 ```
