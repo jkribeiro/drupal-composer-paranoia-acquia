@@ -1,0 +1,22 @@
+{
+  "name": "jkribeiro/drupal-composer-paranoia-acquia",
+  "description": "Composer plugin to improve the security of composer-based Drupal projects by moving all PHP files out of docroot for Acquia Environments.",
+  "type": "composer-plugin",
+  "license": "GPL-2.0+",
+  "require": {
+      "php": ">=5.4.5",
+      "composer-plugin-api": "^1.1",
+      "jkribeiro/drupal-composer-paranoia": "~1"
+  },
+  "require-dev": {
+      "composer/composer": "dev-master"
+  },
+  "autoload": {
+      "psr-4": {
+          "Jkribeiro\\DrupalComposerParanoiaAcquia\\": "src/"
+      }
+  },
+  "extra": {
+      "class": "Jkribeiro\\DrupalComposerParanoiaAcquia\\Plugin"
+  }
+}
