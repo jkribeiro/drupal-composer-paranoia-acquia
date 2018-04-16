@@ -41,6 +41,12 @@ Use `composer require ...` to install this Plugin on your project.
 composer require jkribeiro/drupal-composer-paranoia-acquia:~1
 ```
 
+Run the following commands to make sure that the new folders are installed:
+```
+composer drupal:paranoia
+composer drupal:paranoia-acquia
+```
+
 Done! Plugin and new docroot are now installed.
 
 ## Folder structure
