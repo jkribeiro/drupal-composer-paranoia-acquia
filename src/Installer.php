@@ -5,7 +5,7 @@ namespace Jkribeiro\DrupalComposerParanoiaAcquia;
 use Composer\Composer;
 use Composer\IO\IOInterface;
 use Composer\Util\Filesystem as ComposerFilesystem;
-use Jkribeiro\DrupalComposerParanoia\Installer as DrupalComposerParanoiaInstaller;
+use DrupalComposer\DrupalParanoia\Installer as DrupalParanoiaInstaller;
 use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 /**
@@ -21,11 +21,11 @@ class Installer {
   const ACQUIA_WEB_DIR = 'docroot';
 
   /**
-   * DrupalComposerParanoia installer object.
+   * DrupalParanoia installer object.
    *
-   * @var \Jkribeiro\DrupalComposerParanoia\Installer
+   * @var \DrupalComposer\DrupalParanoia\Installer
    */
-  protected $drupalComposerParanoiaInstaller;
+  protected $drupalParanoiaInstaller;
 
   /**
    * IO object.
@@ -59,7 +59,7 @@ class Installer {
   public function __construct(Composer $composer, IOInterface $io) {
     $this->io = $io;
 
-    $this->drupalComposerParanoiaInstaller = new DrupalComposerParanoiaInstaller($composer, $io);
+    $this->drupalParanoiaInstaller = new DrupalParanoiaInstaller($composer, $io);
 
     /*
      * Checks if the web directory folder is set to 'docroot'.
@@ -93,7 +93,7 @@ class Installer {
      *
      * This step creates a stub settings.php file in the web directory.
      */
-    $this->drupalComposerParanoiaInstaller->createStubPhpFile('sites/default/settings.php');
+    $this->drupalParanoiaInstaller->createStubPhpFile('sites/default/settings.php');
 
     /*
      * Change the public files folder symlink to works on Acquia and locally.
@@ -114,6 +114,7 @@ class Installer {
 
     // Skip this step if the symlink already exist.
     if (is_link($appDirDefaultFiles)) {
+      $this->io->write("> drupal-composer-paranoia-acquia: Already configured.");
       return;
     }
 
