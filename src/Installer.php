@@ -6,6 +6,7 @@ use Composer\Composer;
 use Composer\IO\IOInterface;
 use Composer\Util\Filesystem as ComposerFilesystem;
 use DrupalComposer\DrupalParanoia\Installer as DrupalParanoiaInstaller;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 /**
@@ -85,56 +86,70 @@ class Installer {
    * Additional installation to run paranoia mode on Acquia cloud servers.
    */
   public function install() {
-    /*
-     * Acquia cloud expects a settings.php file at "docroot/sites/default"
-     * to automatically create the 'files' symlink pointing to Acquia server
-     * files folder.
-     * See https://docs.acquia.com/cloud/files.
-     *
-     * This step creates a stub settings.php file in the web directory.
-     */
-    $this->drupalParanoiaInstaller->createStubPhpFile('sites/default/settings.php');
-
-    /*
-     * Change the public files folder symlink to works on Acquia and locally.
-     *
-     * The default AssetInstaller symlinks:
-     * docroot/sites/default/files (symlink) -> app/sites/default/files (folder)
-     *
-     * On Acquia, we need to invert the symlinks:
-     * app/sites/default/files (symlink) -> docroot/sites/default/files (Acquia symlink to server files)
-     *
-     * On local environment we need:
-     * app/sites/default/files (symlink) -> docroot/sites/default/files (symlink)
-     * docroot/sites/default/files (symlink) -> app/public-files (folder)
-     * This is necessary because the web repo is deleted and recreated every
-     * time that the paranoia installation runs.
-     */
-    $appDirDefaultFiles = realpath($this->appDir) . '/sites/default/files';
-
-    // Skip this step if the symlink already exist.
-    if (is_link($appDirDefaultFiles)) {
-      $this->io->write("> drupal-composer-paranoia-acquia: Already configured.");
-      return;
-    }
-
+    $finder = new Finder();
     $cfs = new ComposerFilesystem();
     $fs = new SymfonyFilesystem();
 
-    $webDirDefaultFiles = realpath($this->webDir) . '/sites/default/files';
-    $appDirPublicFiles = realpath($this->appDir) . '/public-files';
+    $finder->in($this->appDir . '/sites')->depth(0);
 
-    // Copy app/sites/default/files to app/public-files.
-    $cfs->copyThenRemove($appDirDefaultFiles, $appDirPublicFiles);
+    /** @var \Symfony\Component\Finder\SplFileInfo $directory */
+    foreach ($finder->directories() as $directory) {
+      $site = $directory->getFilename();
 
-    // Destroy the symlink web/sites/default/files.
-    $fs->remove($webDirDefaultFiles);
+      /*
+       * Acquia cloud expects a settings.php file at "docroot/sites/default"
+       * to automatically create the 'files' symlink pointing to Acquia server
+       * files folder.
+       * See https://docs.acquia.com/cloud/files.
+       *
+       * This step creates a stub settings.php file in the docroot directory.
+       */
+      $this->drupalParanoiaInstaller->createStubPhpFile("sites/{$site}/settings.php");
 
-    // Symlink docroot/sites/default/files -> app/public-files.
-    $cfs->relativeSymlink($appDirPublicFiles, $webDirDefaultFiles);
+      /*
+       * Change the public files folder symlink to works on Acquia and locally.
+       *
+       * The default AssetInstaller symlinks:
+       * docroot/sites/<site>/files (symlink) -> app/sites/<site>/files (folder)
+       *
+       * On Acquia, we need to invert the symlinks:
+       * app/sites/<site>/files (symlink) -> docroot/sites/<site>/files (Acquia symlink to server files)
+       *
+       * On local environment we need:
+       * app/sites/<site>/files (symlink) -> docroot/sites/<site>/files (symlink)
+       * docroot/sites/<site>/files (symlink) -> app/public-files(-<site>) (folder)
+       * This is necessary because the docroot repo is deleted and recreated every
+       * time that the paranoia installation runs.
+       */
+      $appDirDefaultFiles = realpath($this->appDir) . "/sites/{$site}/files";
 
-    // Symlink app/sites/default/files -> web/sites/default/files.
-    $cfs->relativeSymlink($webDirDefaultFiles, $appDirDefaultFiles);
+      if (!is_link($appDirDefaultFiles) && !file_exists($appDirDefaultFiles)) {
+        continue;
+      }
+
+      $appDirPublicFiles = realpath($this->appDir) . "/public-files-{$site}";
+      if ($site == 'default') {
+        $appDirPublicFiles = realpath($this->appDir) . "/public-files";
+      }
+
+      $webDirDefaultFiles = realpath($this->webDir) . "/sites/{$site}/files";
+
+      if (!file_exists($appDirPublicFiles)) {
+        // Copy app/sites/<site>/files to app/public-files(-<site>).
+        $cfs->copyThenRemove($appDirDefaultFiles, $appDirPublicFiles);
+      }
+
+      // Destroy the symlink docroot/sites/<site>/files.
+      $fs->remove($webDirDefaultFiles);
+
+      // Symlink docroot/sites/<site>/files -> app/public-files(-<site>).
+      $cfs->relativeSymlink($appDirPublicFiles, $webDirDefaultFiles);
+
+      if (!is_link($appDirDefaultFiles)) {
+        // Symlink app/sites/<site>/files -> docroot/sites/<site>/files.
+        $cfs->relativeSymlink($webDirDefaultFiles, $appDirDefaultFiles);
+      }
+    }
 
     $this->io->write("> drupal-composer-paranoia-acquia: Additional installation for Acquia environments has been made.");
   }
