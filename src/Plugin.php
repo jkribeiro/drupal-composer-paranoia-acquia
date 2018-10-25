@@ -5,10 +5,12 @@ namespace Jkribeiro\DrupalComposerParanoiaAcquia;
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\IO\IOInterface;
+use Composer\Plugin\CommandEvent;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
+use DrupalComposer\DrupalParanoia\PluginEvents as DrupalParanoiaPluginEvents;
 
 /**
  * Composer plugin to move all PHP files out of the docroot on Acquia envs.
@@ -45,6 +47,7 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
     return array(
       ScriptEvents::POST_INSTALL_CMD => array('postCmd', -2),
       ScriptEvents::POST_UPDATE_CMD => array('postCmd', -2),
+      DrupalParanoiaPluginEvents::POST_COMMAND_RUN => 'postDrupalParanoiaCommand',
     );
   }
 
@@ -56,6 +59,16 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable {
    */
   public function postCmd(Event $event) {
     $this->installer->onPostCmdEvent();
+  }
+
+  /**
+   * Event callback for post drupal:paranoia command execution.
+   *
+   * @param \Composer\Plugin\CommandEvent $event
+   *   CommandEvent object.
+   */
+  public function postDrupalParanoiaCommand(CommandEvent $event) {
+    $this->installer->install();
   }
 
 }

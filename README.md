@@ -30,8 +30,7 @@ Update the `composer.json` of your root package with the following changes:
         "drush/contrib/{$name}": ["type:drupal-drush"]
     },
     "drupal-app-dir": "app",
-    "drupal-web-dir": "docroot",
-    "drupal-web-dir-public-files": "app/public-files"
+    "drupal-web-dir": "docroot"
     "..."
 }
 ```
