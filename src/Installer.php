@@ -62,17 +62,27 @@ class Installer {
 
     $this->drupalParanoiaInstaller = new DrupalParanoiaInstaller($composer, $io);
 
+    // BC: See https://github.com/drupal-composer/drupal-paranoia/pull/12
+    if (method_exists($this->drupalParanoiaInstaller, 'getConfig')) {
+      $app_dir = $this->drupalParanoiaInstaller->getConfig('app-dir');
+      $web_dir = $this->drupalParanoiaInstaller->getConfig('web-dir');
+    }
+    else {
+      $extra = $composer->getPackage()->getExtra();
+      $app_dir = $extra['drupal-app-dir'];
+      $web_dir = $extra['drupal-web-dir'];
+    }
+
     /*
      * Checks if the web directory folder is set to 'docroot'.
      * See https://docs.acquia.com/article/docroot-definition.
      */
-    $extra = $composer->getPackage()->getExtra();
-    if ($extra['drupal-web-dir'] != $this::ACQUIA_WEB_DIR) {
-      throw new \RuntimeException('To install paranoia mode on Acquia Cloud servers, set "drupal-web-dir" to "docroot" in your composer.json.');
+    if ($web_dir != $this::ACQUIA_WEB_DIR) {
+      throw new \RuntimeException('Set Drupal Paranoia "web-dir" config to "docroot" in your composer.json.');
     }
 
-    $this->appDir = $extra['drupal-app-dir'];
-    $this->webDir = $extra['drupal-web-dir'];
+    $this->appDir = $app_dir;
+    $this->webDir = $web_dir;
   }
 
   /**

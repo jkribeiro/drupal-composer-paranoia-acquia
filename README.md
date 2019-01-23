@@ -29,8 +29,10 @@ Update the `composer.json` of your root package with the following changes:
         "app/themes/contrib/{$name}": ["type:drupal-theme"],
         "drush/contrib/{$name}": ["type:drupal-drush"]
     },
-    "drupal-app-dir": "app",
-    "drupal-web-dir": "docroot"
+    "drupal-paranoia": {
+        "app-dir": "app",
+        "web-dir": "docroot"
+    }
     "..."
 }
 ```
