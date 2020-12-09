@@ -2,6 +2,9 @@
 
 ## Releases
 
+### 1.0.0-alpha4, 2020-12-09
+- Added support for Composer 2.x.
+
 ### 1.0.0-alpha3, 2019-01-23
 - Added backward compatibility for Drupal Paranoia configs. See https://github.com/drupal-composer/drupal-paranoia/pull/12.
 
